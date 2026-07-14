@@ -15,7 +15,7 @@ php artisan migrate --force || true
 php artisan optimize || true
 
 
-apache2-foreground
+exec apache2-foreground
 
 
 
