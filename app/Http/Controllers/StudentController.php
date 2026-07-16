@@ -1,16 +1,15 @@
 <?php
 
-
 namespace App\Http\Controllers;
 
-
 use App\Events\StudentCreated;
+use App\Events\StudentUpdated;
+use App\Events\StudentDeleted;
 use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
 use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
-
 
 class StudentController extends Controller
 {
@@ -24,10 +23,8 @@ class StudentController extends Controller
             ->orderBy('first_name')
             ->paginate(10);
 
-
         return view('students.index', compact('students'));
     }
-
 
     /**
      * Show the form for creating a new student.
@@ -37,7 +34,6 @@ class StudentController extends Controller
         return view('students.create');
     }
 
-
     /**
      * Store a newly created student.
      */
@@ -45,15 +41,12 @@ class StudentController extends Controller
     {
         $student = Student::create($request->validated());
 
-
-        broadcast(new StudentCreated($student));
-
+        broadcast(new StudentCreated($student))->toOthers();
 
         return redirect()
             ->route('students.index')
             ->with('status', 'student-created');
     }
-
 
     /**
      * Show the form for editing the specified student.
@@ -63,7 +56,6 @@ class StudentController extends Controller
         return view('students.edit', compact('student'));
     }
 
-
     /**
      * Update the specified student.
      */
@@ -71,28 +63,31 @@ class StudentController extends Controller
     {
         $student->update($request->validated());
 
+        broadcast(new StudentUpdated($student))->toOthers();
 
         return redirect()
             ->route('students.index')
             ->with('status', 'student-updated');
     }
 
-
     /**
      * Remove the specified student.
      */
     public function destroy(Student $student): RedirectResponse
     {
+    
+        $studentData = [
+            'id' => $student->id,
+            'first_name' => $student->first_name,
+            'last_name' => $student->last_name
+        ];
+
         $student->delete();
 
+        broadcast(new StudentDeleted($studentData))->toOthers();
 
         return redirect()
             ->route('students.index')
             ->with('status', 'student-deleted');
     }
 }
-
-
-
-
-
